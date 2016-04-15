@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">IttyBittyLocator</string>
     <string name="title_activity_maps">Itty Bitty Locations</string>
+
+    <string name="need_loc_descr">Itty Bitty locations needs access to your device location to show places relevant to you where you can physically access them.</string>
+    <string name="need_loc_title">Need access</string>
+
 </resources>
