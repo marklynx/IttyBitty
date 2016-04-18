@@ -5,4 +5,6 @@
     <string name="need_loc_descr">Itty Bitty locations needs access to your device location to show places relevant to you where you can physically access them.</string>
     <string name="need_loc_title">Need access</string>
 
+    <string name="places_api_url">https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={1}&amp;radius=1000&amp;types=food&amp;key={2}</string>
+
 </resources>
