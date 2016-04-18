@@ -26,9 +26,13 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.ittybitty.locator.algorithms.ShortestTraversal;
+import com.ittybitty.locator.service.Place;
 import com.ittybitty.locator.service.PlacesRequestor;
 import com.ittybitty.locator.service.PlacesResults;
 import com.ittybitty.locator.utils.Result;
+
+import java.util.List;
 
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener {
@@ -161,6 +165,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
 
+        this.findPlaces(latlng);
+    }
+
+
+    private void findPlaces(final LatLng latlng){
         PlacesRequestor.requestPlaces(this, latlng, new PlacesRequestor.PlaceRequestorListener<PlacesResults>() {
             @Override
             public void placesReady(Result<PlacesResults> result) {
@@ -173,6 +182,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     // Hooray! Someone will have a great coffee soon!
                     for(com.ittybitty.locator.service.Place place : result.value.getPlaces()){
                         mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_cafe)).position(place.getLocation()).title(place.getTitle()).snippet(place.getAddress()));
+                    }
+
+                    plotRoute(latlng, result.value.getPlaces());
+                }
+            }
+        });
+    }
+
+    private void plotRoute(LatLng startPoint, List<Place> places){
+        PlacesRequestor.requestRoute(this, startPoint, places, new PlacesRequestor.PlaceRequestorListener<List<Place>>() {
+            @Override
+            public void placesReady(Result<List<Place>> result) {
+                if(result.errors != null && !result.errors.isEmpty()){
+                    // Something has gone wrong while querying the google services.
+                    // Unfortunately my UX guy was too lazy to provide me with proper UI responses.
+                    // So silly Mark Garab decided to just leave this here. Oh maybe a Toast?
+                    safeUIToast(result.errors.get(0).getMessage(), Toast.LENGTH_LONG);
+                } else {
+                    // Now you have your postman's route to try all of the coffees you may like.
+                    int i = 1;
+                    for(com.ittybitty.locator.service.Place place : result.value){
+                        mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_cafe)).position(place.getLocation()).title("" + (i++)));
                     }
                 }
             }

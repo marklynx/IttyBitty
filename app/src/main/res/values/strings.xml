@@ -6,5 +6,6 @@
     <string name="need_loc_title">Need access</string>
 
     <string name="places_api_url">https://maps.googleapis.com/maps/api/place/nearbysearch/json?location={1}&amp;radius=1000&amp;types=food&amp;key={2}</string>
+    <string name="directions_api_url">https://maps.googleapis.com/maps/api/directions/json?origin={1}&amp;destination={1}&amp;key={2}&amp;mode=walking&amp;alternatives=false&amp;waypoints=optimize:true{3}</string>
 
 </resources>

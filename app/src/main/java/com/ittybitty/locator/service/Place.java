@@ -44,6 +44,17 @@ public class Place {
         this.title = title;
     }
 
+    @Override
+    public Place clone(){
+        Place dupl = new Place();
+
+        dupl.title = this.title;
+        dupl.address = this.address;
+        dupl.location = this.location;
+
+        return dupl;
+    }
+
     public static Place parseJSON(JSONObject object){
         if(object != null){
             Place place = new Place();
