@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -26,12 +27,14 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.ittybitty.locator.algorithms.ShortestTraversal;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.ittybitty.locator.service.Place;
 import com.ittybitty.locator.service.PlacesRequestor;
 import com.ittybitty.locator.service.PlacesResults;
 import com.ittybitty.locator.utils.Result;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
@@ -154,7 +157,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void exploreLocation(LatLng latlng, boolean yourLocation){
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
         if(yourLocation){
             //your location will be true if this method is called from within GPS location detection callbacks
             mMap.addMarker(new MarkerOptions().position(latlng).title("You are here"));
@@ -163,7 +165,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             // in this case no device location pin is necessary. Leave empty
             // this scenario is out of scope. So won't be considered at this stage
         }
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(latlng));
+        mMap.animateCamera(CameraUpdateFactory.newLatLng(latlng));
 
         this.findPlaces(latlng);
     }
@@ -201,10 +203,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     safeUIToast(result.errors.get(0).getMessage(), Toast.LENGTH_LONG);
                 } else {
                     // Now you have your postman's route to try all of the coffees you may like.
-                    int i = 1;
+                    List<LatLng> route = new ArrayList<LatLng>();
                     for(com.ittybitty.locator.service.Place place : result.value){
-                        mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_cafe)).position(place.getLocation()).title("" + (i++)));
+                        route.add(place.getLocation());
                     }
+
+                    Polyline line = mMap.addPolyline(new PolylineOptions()
+                        .addAll(route)
+                        .width(12)
+                        .color(Color.parseColor("#00BB00"))
+                        .geodesic(true)
+                    );
                 }
             }
         });
