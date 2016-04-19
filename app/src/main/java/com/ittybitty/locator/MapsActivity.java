@@ -167,12 +167,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         mMap.animateCamera(CameraUpdateFactory.newLatLng(latlng));
 
-        this.findPlaces(latlng);
+        this.findPlaces(latlng, null);
     }
 
 
-    private void findPlaces(final LatLng latlng){
-        PlacesRequestor.requestPlaces(this, latlng, new PlacesRequestor.PlaceRequestorListener<PlacesResults>() {
+    private void findPlaces(final LatLng latlng, final PlacesResults updateResults){
+        PlacesRequestor.requestPlaces(this, latlng, updateResults, new PlacesRequestor.PlaceRequestorListener<PlacesResults>() {
             @Override
             public void placesReady(Result<PlacesResults> result) {
                 if(result.errors != null && !result.errors.isEmpty()){
@@ -182,6 +182,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     safeUIToast(result.errors.get(0).getMessage(), Toast.LENGTH_LONG);
                 } else {
                     // Hooray! Someone will have a great coffee soon!
+
+                    //The commented code below is the logical implementation of accumulating 100 places, however the google api is capable of considering up to 23 waypoints only.
+                    //Effectively our queries and results are limited to 20.
+                    /*if(result.value.getPlaces().size() >= 100){
+                        for(com.ittybitty.locator.service.Place place : result.value.getPlaces()){
+                            mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_cafe)).position(place.getLocation()).title(place.getTitle()).snippet(place.getAddress()));
+                        }
+
+                        plotRoute(latlng, result.value.getPlaces());
+                    } else {
+                        findPlaces(latlng, result.value);
+                    }*/
+
+                    //This is the actual limit of the places and waypoints that can be operational in any given time
                     for(com.ittybitty.locator.service.Place place : result.value.getPlaces()){
                         mMap.addMarker(new MarkerOptions().icon(BitmapDescriptorFactory.fromResource(R.drawable.ic_cafe)).position(place.getLocation()).title(place.getTitle()).snippet(place.getAddress()));
                     }

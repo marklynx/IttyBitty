@@ -28,6 +28,7 @@ public class PlacesRequestor {
 
     private static List<PlacesQuery> queryQueue;
     private static String placesAPIUrl;
+    private static String placesUpdateAPIUrl;
     private static String routeAPIUrl;
 
     public interface PlaceRequestorListener<T>{
@@ -37,9 +38,11 @@ public class PlacesRequestor {
     private static final class PlacesQuery{
         private final LatLng center;
         private final PlaceRequestorListener listener;
+        private final PlacesResults updateResults;
 
-        public PlacesQuery(LatLng centerPoint, PlaceRequestorListener listener){
+        public PlacesQuery(LatLng centerPoint, PlacesResults updateResults, PlaceRequestorListener listener){
             this.center = centerPoint;
+            this.updateResults = updateResults;
             this.listener = listener;
         }
     }
@@ -102,9 +105,12 @@ public class PlacesRequestor {
         }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR, (Void[])null);
     }
 
-    public static void requestPlaces(Context context, LatLng centerPoint, final PlaceRequestorListener listener){
+    public static void requestPlaces(Context context, LatLng centerPoint, PlacesResults updateResults, final PlaceRequestorListener listener){
         if(placesAPIUrl == null){
             placesAPIUrl = context.getString(R.string.places_api_url).replace("&amp;", "&").replace("{2}", context.getString(R.string.google_places_web_key));
+        }
+        if(placesUpdateAPIUrl == null){
+            placesUpdateAPIUrl = context.getString(R.string.places_api_update_url).replace("&amp;", "&").replace("{2}", context.getString(R.string.google_places_web_key));
         }
 
         if(queryQueue == null){
@@ -112,7 +118,7 @@ public class PlacesRequestor {
         }
 
         synchronized (queryQueue){
-            queryQueue.add(new PlacesQuery(centerPoint, listener));
+            queryQueue.add(new PlacesQuery(centerPoint, updateResults, listener));
         }
 
         nextQuery();
@@ -138,7 +144,9 @@ public class PlacesRequestor {
             @Override
             public Result<PlacesResults> doInBackground(PlacesQuery... query){
                 try{
-                    String url = placesAPIUrl.replace("{1}", query[0].center.latitude + "," + query[0].center.longitude);
+                    String url = (query[0].updateResults == null) ?
+                            (placesAPIUrl.replace("{1}", query[0].center.latitude + "," + query[0].center.longitude)) :
+                            (placesUpdateAPIUrl.replace("{1}", query[0].center.latitude + "," + query[0].center.longitude).replace("{3}", query[0].updateResults.getNextPageToken()));
 
                     HttpURLConnection connection = (HttpURLConnection) new URL(url).openConnection();
 
@@ -146,7 +154,12 @@ public class PlacesRequestor {
                     if(responseCode > 199 && responseCode < 300){
                         JSONObject response = readFromConnection(connection);
 
-                        PlacesResults results = PlacesResults.parseJSON(response.optJSONArray(PlacesResults.PARAM_RESULTS));
+                        PlacesResults results = PlacesResults.parseJSON(response);
+
+                        if(query[0].updateResults != null){
+                            query[0].updateResults.update(results, false);
+                            results = query[0].updateResults;
+                        }
 
                         return new Result<>(results);
 

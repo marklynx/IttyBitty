@@ -12,8 +12,11 @@ import java.util.List;
 public class PlacesResults {
 
     public static final String PARAM_RESULTS = "results";
+    public static final String PARAM_NEXT_PAGE_TOKEN = "next_page_token";
 
     private List<Place> places;
+
+    private String nextPageToken;
 
     public PlacesResults(List<Place> places){
         this.places = places;
@@ -27,24 +30,42 @@ public class PlacesResults {
         this.places = places;
     }
 
-    public static PlacesResults parseJSON(JSONArray array){
-        if(array != null){
-            PlacesResults results = new PlacesResults(new ArrayList<Place>());
-
-            for(int i = 0; i < array.length(); ++i){
-                JSONObject object = array.optJSONObject(i);
-                if(object != null){
-                    Place place = Place.parseJSON(object);
-                    if(place != null){
-                        results.places.add(place);
-                    }
-                }
-            }
-
-            return results;
-        }
-
-        return null;
+    public String getNextPageToken() {
+        return nextPageToken;
     }
 
+    public void update(PlacesResults newResults, boolean clearOld){
+        if(newResults != null){
+            if(clearOld){
+                this.places = newResults.places;
+            } else {
+                this.places.addAll(newResults.places);
+            }
+            this.nextPageToken = newResults.nextPageToken;
+        }
+    }
+
+    public static PlacesResults parseJSON(JSONObject object){
+        if(object != null){
+            PlacesResults results = new PlacesResults(new ArrayList<Place>());
+
+            results.nextPageToken = object.optString(PARAM_NEXT_PAGE_TOKEN);
+
+            JSONArray array = object.optJSONArray(PARAM_RESULTS);
+            if(array != null){
+                for(int i = 0; i < array.length(); ++i){
+                    JSONObject pObject = array.optJSONObject(i);
+                    if(pObject != null){
+                        Place place = Place.parseJSON(pObject);
+                        if(place != null){
+                            results.places.add(place);
+                        }
+                    }
+                }
+
+                return results;
+            }
+        }
+        return null;
+    }
 }
